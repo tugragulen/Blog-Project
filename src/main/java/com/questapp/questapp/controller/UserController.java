@@ -2,6 +2,7 @@ package com.questapp.questapp.controller;
 
 import com.questapp.questapp.entities.User;
 import com.questapp.questapp.services.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,38 +23,39 @@ public class UserController {
     public ResponseEntity<?> getUser(@RequestParam(required = false) Optional<Long> userId){
         if(userId.isPresent()){
             Optional<User> user = Optional.ofNullable(userService.findUserById(userId.get()));
-            if(user.isPresent()) return ResponseEntity.ok(user.get());
+            if(user.isPresent()) return new ResponseEntity<>(user.get(), HttpStatus.OK);
             else {
                 return ResponseEntity.notFound().build();
             }
         }
         else{
             List<User> users = userService.findAllUsers();
-            return ResponseEntity.ok(users);
+            return new ResponseEntity<>(users, HttpStatus.OK);
         }
     }
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User newUser){
         User addedUser = userService.createUser(newUser);
-        return ResponseEntity.ok(addedUser);
+        return new ResponseEntity<>(addedUser, HttpStatus.CREATED);
     }
 
     @PutMapping("/{userId}")
     public ResponseEntity<User> updateUser(@PathVariable(value = "userId") Long userId, @RequestBody User newUser){
         User updatedUser = userService.updateUser(userId, newUser);
         if (updatedUser != null){
-            return ResponseEntity.ok(updatedUser);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         }
         else{
-            return null;
+            System.out.println("Kullanıcı bulunamadı.");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId){
         userService.deleteById(userId);
-        return (ResponseEntity<?>) ResponseEntity.ok();
+        return new ResponseEntity<>(HttpStatus.OK);
      }
 
 }

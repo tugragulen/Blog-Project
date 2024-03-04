@@ -2,9 +2,11 @@ package com.questapp.questapp.services;
 
 import com.questapp.questapp.entities.Like;
 import com.questapp.questapp.repos.LikeRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class LikeService {
     private LikeRepository likeRepository;
 
