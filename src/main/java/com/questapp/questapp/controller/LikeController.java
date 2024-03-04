@@ -2,7 +2,10 @@ package com.questapp.questapp.controller;
 
 import com.questapp.questapp.entities.Like;
 import com.questapp.questapp.entities.Post;
-import com.questapp.questapp.repos.LikeRepository;
+import com.questapp.questapp.entities.User;
+import com.questapp.questapp.services.LikeService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,34 +16,36 @@ import java.util.Optional;
 @RequestMapping("/likes")
 public class LikeController {
 
-    private LikeRepository likeRepository;
-    public LikeController(LikeRepository likeRepository) {
-        this.likeRepository = likeRepository;
+    private LikeService likeService;
+    public LikeController(LikeService likeService) {
+        this.likeService = likeService;
     }
 
     @GetMapping
     public ResponseEntity<?> getLike(@RequestParam(required = false) Optional<Long> likeId){
         if(likeId.isPresent()){
-            Optional<Like> like = likeRepository.findById(likeId.get());
+            Optional<Like> like = Optional.ofNullable(likeService.findLikeById(likeId.get()));
             if(like.isPresent()) return ResponseEntity.ok(like.get());
             else {
                 return ResponseEntity.notFound().build();
             }
         }
         else{
-            List<Like> likes = likeRepository.findAll();
+            List<Like> likes = likeService.findAllLikes();
             return ResponseEntity.ok(likes);
         }
     }
 
     @PostMapping
-    public Like createLike(@RequestBody Like newLike){
-        return likeRepository.save(newLike);
+    public ResponseEntity<Like> createLike(@RequestBody Like newLike){
+        Like addedLike = likeService.createLike(newLike);
+        return new ResponseEntity<Like>(addedLike, HttpStatus.CREATED);
     }
 
 
     @DeleteMapping("/{likeId}")
-    public void deleteLike(@PathVariable Long likeId){
-        likeRepository.deleteById(likeId);
+    public ResponseEntity<?> ResponseEntity(@PathVariable Long likeId){
+        likeService.deleteLikeById(likeId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

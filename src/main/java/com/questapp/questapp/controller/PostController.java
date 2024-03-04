@@ -2,7 +2,7 @@ package com.questapp.questapp.controller;
 
 import com.questapp.questapp.entities.Post;
 import com.questapp.questapp.entities.User;
-import com.questapp.questapp.repos.PostRepository;
+import com.questapp.questapp.services.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,41 +12,38 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/posts")
 public class PostController {
-    private PostRepository postRepository;
+    private PostService postService;
 
-    public PostController(PostRepository postRepository) {
-        this.postRepository = postRepository;
+    public PostController(PostService postService) {
+        this.postService = postService;
     }
 
     @GetMapping
     public ResponseEntity<?> getPost(@RequestParam(required = false) Optional<Long> id){
         if(id.isPresent()){
-            Optional<Post> post = postRepository.findById(id.get());
+            Optional<Post> post = Optional.ofNullable(postService.findPostById(id.get()));
             if(post.isPresent()) return ResponseEntity.ok(post.get());
             else {
                 return ResponseEntity.notFound().build();
             }
         }
         else{
-            List<Post> posts = postRepository.findAll();
+            List<Post> posts = postService.findAllPosts();
             return ResponseEntity.ok(posts);
         }
     }
 
     @PostMapping
-    public Post createPost(@RequestBody Post newPost){
-        return postRepository.save(newPost);
+    public ResponseEntity<Post> createPost(@RequestBody Post newPost){
+        Post addedPost = postService.createPost(newPost);
+        return ResponseEntity.ok(addedPost);
     }
 
     @PutMapping("/{postId}")
-    public Post updatePost(@PathVariable(value = "postId") Long postId, @RequestBody Post newPost){
-        Optional<Post> post = postRepository.findById(postId);
-        if(post.isPresent()){
-            Post foundPost = post.get();
-            foundPost.setText(newPost.getText());
-            foundPost.setTitle(newPost.getTitle());
-            postRepository.save(foundPost);
-            return foundPost;
+    public ResponseEntity<Post> updatePost(@PathVariable(value = "postId") Long postId, @RequestBody Post newPost){
+        Post updatedPost = postService.updatePost(postId, newPost);
+        if(updatedPost != null){
+            return ResponseEntity.ok(updatedPost);
         }
         else{
             return null;
@@ -54,7 +51,8 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}")
-    public void deletePost(@PathVariable Long postId){
-        postRepository.deleteById(postId);
+    public ResponseEntity deletePost(@PathVariable Long postId){
+        postService.deleteById(postId);
+        return (ResponseEntity) ResponseEntity.ok();
     }
 }
