@@ -1,5 +1,7 @@
 package com.questapp.questapp.controller;
 
+import com.questapp.questapp.dtos.CreatePostDTO;
+import com.questapp.questapp.dtos.UpdatePostDTO;
 import com.questapp.questapp.entities.Post;
 import com.questapp.questapp.entities.User;
 import com.questapp.questapp.services.PostService;
@@ -20,12 +22,13 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getPost(@RequestParam(required = false) Optional<Long> postId){
-        if(postId.isPresent()){
-            Optional<Post> post = Optional.ofNullable(postService.findPostById(postId.get()));
+    public ResponseEntity<?> getPost(@RequestParam(required = false) Optional<Long> userId){
+        if(userId.isPresent()){
+            Optional<List<Post>> post = Optional.ofNullable(postService.findPostsByUserId(userId.get()));
             if(post.isPresent()) return new ResponseEntity<>(post.get(), HttpStatus.OK);
             else {
-                return ResponseEntity.notFound().build();
+                System.out.println("Kullanıcı yok");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
         }
         else{
@@ -33,15 +36,23 @@ public class PostController {
             return new ResponseEntity<>(posts, HttpStatus.OK);
         }
     }
+    @GetMapping("/{postId}")
+    public ResponseEntity<?> getPost(@PathVariable Long postId){
+        Optional<Post> post = Optional.ofNullable(postService.findPostById(postId));
+        if (post.isPresent()) return new ResponseEntity<>(post, HttpStatus.OK);
+        else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @PostMapping
-    public ResponseEntity<Post> createPost(@RequestBody Post newPost){
+    public ResponseEntity<Post> createPost(@RequestBody CreatePostDTO newPost){
         Post addedPost = postService.createPost(newPost);
         return new ResponseEntity<>(addedPost, HttpStatus.CREATED);
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<Post> updatePost(@PathVariable(value = "postId") Long postId, @RequestBody Post newPost){
+    public ResponseEntity<Post> updatePost(@PathVariable(value = "postId") Long postId, @RequestBody UpdatePostDTO newPost){
         Post updatedPost = postService.updatePost(postId, newPost);
         if(updatedPost != null){
             return new ResponseEntity<>(updatedPost, HttpStatus.OK);
